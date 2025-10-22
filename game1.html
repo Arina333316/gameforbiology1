@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Гра: ДНК чи РНК</title>
+<style>
+body { font-family: Arial, sans-serif; background:#e0f7fa; margin:0; padding:0; }
+header { background:#00acc1; color:white; text-align:center; padding:20px; font-size:32px; font-weight:bold; }
+.container { width:90%; max-width:800px; margin:20px auto; background:#fff; padding:15px; border-radius:15px; box-shadow:0 0 15px #999; }
+.theory { background:#b2ebf2; padding:15px; border-radius:10px; margin-bottom:20px; font-size:16px; line-height:1.5; }
+.theory h4 { text-align:center; margin-bottom:10px; color:#007c91; font-size:22px; }
+.start-btn { display:block; margin:15px auto; background:#00acc1; color:white; font-size:20px; padding:12px 40px; border:none; border-radius:10px; cursor:pointer; }
+.start-btn:hover { background:#00838f; }
+.question-box { background:#fff9c4; padding:15px; border-radius:10px; margin-bottom:15px; text-align:center; font-size:18px; }
+.options button { background:#00acc1; color:white; border:none; padding:12px 25px; margin:8px; font-size:16px; border-radius:10px; cursor:pointer; width:40%; }
+.options button:hover { background:#00838f; }
+.result { text-align:center; font-size:20px; margin-top:15px; }
+.emoji { font-size:32px; }
+.retry-btn { display:block; margin:10px auto; background:#ff9800; color:white; font-size:16px; padding:10px 20px; border:none; border-radius:10px; cursor:pointer; }
+.retry-btn:hover { background:#f57c00; }
+@media(max-width:480px){
+  header { font-size:28px; padding:15px; }
+  .theory { font-size:14px; }
+  .theory h4 { font-size:20px; }
+  .options button { width:45%; font-size:14px; padding:10px; }
+  .start-btn { font-size:18px; padding:10px 30px; }
+}
+</style>
+</head>
+<body>
+
+<header>🎲 ГРА: ДНК чи РНК 🎲</header>
+
+<div class="container">
+
+<div id="theory" class="theory">
+<h4>📚 Невелика теорія для повторення</h4>
+<p>Уяви, що <strong>ДНК</strong> — це велика бібліотека. Вона зберігає всі книги з інструкціями для життя. Це “архів” інформації — ніхто не змінює книги всередині бібліотеки.</p>
+<p><strong>РНК</strong> — це кур’єр. Коли організму потрібна певна інструкція з бібліотеки, РНК переписує потрібну сторінку і відносить її до “майстерні” — рибосоми, де створюються білки. РНК працює швидко і може бути у багатьох копіях одночасно.</p>
+<p>Отже, пам’ятай: <strong>ДНК = зберігає інформацію, РНК = переносить інформацію</strong>.</p>
+<button class="start-btn" id="startBtn">Почати гру 🚀</button>
+</div>
+
+<div id="game" style="display:none;">
+<div id="question-box" class="question-box"></div>
+<div class="options">
+  <button onclick="answer('ДНК')">ДНК</button>
+  <button onclick="answer('РНК')">РНК</button>
+</div>
+<div id="feedback" class="result"></div>
+</div>
+
+<div id="final" class="result"></div>
+
+</div>
+
+<script>
+const questionsOriginal = [
+  {q: "Зберігає спадкову інформацію.", a: "ДНК"},
+  {q: "Переважно одноланцюгова молекула.", a: "РНК"},
+  {q: "Містить тимін (T).", a: "ДНК"},
+  {q: "Містить урацил (U).", a: "РНК"},
+  {q: "Переносить інформацію до рибосоми.", a: "РНК"},
+  {q: "Двоспіральна молекула.", a: "ДНК"},
+  {q: "Використовується для синтезу білків.", a: "РНК"},
+  {q: "Знаходиться в ядрі.", a: "ДНК"},
+  {q: "Може бути у багатьох копіях одночасно.", a: "РНК"},
+  {q: "Містить дезоксирибозу.", a: "ДНК"}
+];
+
+let questions = [];
+let score = 0;
+let current = 0;
+let wrongQuestions = [];
+let allowNext = false;
+
+function shuffle(array){
+  for(let i=array.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+
+function startGame(){
+  questions = [...questionsOriginal];
+  shuffle(questions);
+  score=0; current=0; wrongQuestions=[];
+  document.getElementById('theory').style.display='none';
+  document.getElementById('final').innerHTML='';
+  document.getElementById('game').style.display='block';
+  showQuestion();
+}
+
+function showQuestion(){
+  if(current<questions.length){
+    allowNext=false;
+    const q=questions[current];
+    document.getElementById('question-box').innerHTML=`
+      <div><strong>Це відноситься до РНК чи ДНК?</strong></div>
+      <p>${q.q}</p>`;
+    document.getElementById('feedback').innerHTML='';
+  } else showFinal();
+}
+
+function answer(userAnswer){
+  if(allowNext) return;
+  const q=questions[current];
+  let correct = userAnswer===q.a;
+  if(correct){
+    score++;
+    const index=wrongQuestions.indexOf(q);
+    if(index>-1) wrongQuestions.splice(index,1);
+    document.getElementById('feedback').innerHTML=`<span style="color:green;">✅ Правильно!</span>`;
+  } else {
+    if(!wrongQuestions.includes(q)) wrongQuestions.push(q);
+    document.getElementById('feedback').innerHTML=`<span style="color:red;">❌ Неправильно! Правильна відповідь: ${q.a}</span>`;
+  }
+  allowNext=true;
+  setTimeout(()=>{current++; showQuestion();},1200);
+}
+
+function showFinal(){
+  document.getElementById('game').style.display='none';
+  let emoji='';
+  if(score===10) emoji='🌟🧬🧬🧬';
+  else if(score>=7) emoji='👍🙂';
+  else if(score>=4) emoji='😐';
+  else emoji='😢';
+  
+  let html=`<h2>🏁 Результат: ${score}/${questionsOriginal.length}</h2>
+  <div class="emoji">${emoji}</div>
+  <p><strong>Слоган:</strong> Знання генів – ключ до майбутнього! 🔑🧬</p>`;
+  
+  if(wrongQuestions.length>0){
+    html+=`<button class="retry-btn" onclick="retryWrong()">Пройти ще раз неправильні питання</button>`;
+  }
+  
+  document.getElementById('final').innerHTML=html;
+}
+
+function retryWrong(){
+  questions=[...wrongQuestions];
+  shuffle(questions);
+  score=0; current=0; wrongQuestions=[];
+  document.getElementById('final').innerHTML='';
+  document.getElementById('game').style.display='block';
+  showQuestion();
+}
+</script>
+
+</body>
+</html>
+
+  
